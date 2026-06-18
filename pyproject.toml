@@ -1,0 +1,40 @@
+# Configuración de Ruff (linter + formateador).
+# Ruff lee esta sección automáticamente al ejecutarlo desde la raíz del proyecto.
+
+[tool.ruff]
+# Longitud de línea objetivo (el mismo valor por defecto que usa Black).
+line-length = 88
+# Versión de Python del proyecto (el venv usa 3.14).
+target-version = "py314"
+# No analizar las migraciones autogeneradas ni el entorno virtual.
+extend-exclude = ["alembic", "venv"]
+
+[tool.ruff.lint]
+# Familias de reglas activadas:
+#   E/W -> pycodestyle (estilo PEP 8)
+#   F   -> pyflakes (imports sin usar, variables sin definir, bugs básicos)
+#   I   -> isort (ordena los imports)
+#   B   -> flake8-bugbear (errores probables y malas prácticas)
+#   UP  -> pyupgrade (sugiere sintaxis moderna de Python)
+select = ["E", "W", "F", "I", "B", "UP"]
+# La longitud de línea la gobierna el formateador, no el linter.
+ignore = ["E501"]
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI usa llamadas como `Depends()` en los valores por defecto a propósito.
+# Le decimos a bugbear que son seguras para que no las marque como B008.
+extend-immutable-calls = [
+    "fastapi.Depends",
+    "fastapi.Query",
+    "fastapi.Path",
+    "fastapi.Body",
+    "fastapi.Header",
+    "fastapi.Cookie",
+    "fastapi.Form",
+    "fastapi.File",
+    "fastapi.Security",
+]
+
+[tool.ruff.format]
+# Comillas dobles como estilo de cadenas (igual que Black).
+quote-style = "double"
