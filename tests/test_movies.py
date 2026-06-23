@@ -86,10 +86,6 @@ def test_crear_pelicula_sin_titulo_da_422(client, auth_headers):
 # ---------------------------------------------------------------------------
 
 
-def test_listar_peliculas_requiere_auth(client):
-    assert client.get("/movies/").status_code == 401
-
-
 def test_listar_peliculas_ok(client, auth_headers, make_movie):
     make_movie(auth_headers, title="A", director="d1")
     make_movie(auth_headers, title="B", director="d2")

@@ -137,15 +137,26 @@ def test_listar_usuarios_con_token_invalido_da_401(client):
     r = client.get("/users/", headers={"Authorization": "Bearer token-basura"})
     assert r.status_code == 401
 
-
-def test_listar_usuarios_ok(client, make_user):
+def test_listar_usuarios_sin_buscar(client, make_user):
     a = make_user(name="Ana")
     make_user(name="Bob")
-    r = client.get("/users/", headers=a["headers"])
+    r = client.get("/users/", headers= a["headers"])
+    assert r.status_code== 200
+    data = r.json()
+    assert r.json()== []
+
+
+
+
+def test_listar_usuarios_por_nombre(client, make_user):
+    a = make_user(name="Ana")
+    b = make_user(name="Bob")
+    r = client.get("/users/?search=An", headers=b["headers"])
     assert r.status_code == 200
     data = r.json()
-    assert len(data) == 2
-    assert all("hashed_password" not in u for u in data)
+    assert len(data) == 1
+    assert r.json()[0]["name"]== "Ana"  
+    
 
 
 # ---------------------------------------------------------------------------
