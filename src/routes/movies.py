@@ -40,9 +40,19 @@ def post_movie(
     return new_movie
 
 
+@router.get("/{movie_id}", response_model= Movie)
+def one_movie(
+    movie_id: int,
+    session: Session = Depends (get_session)):
+
+    movie= session.get(Movie, movie_id)
+    if movie is None: 
+        raise HTTPException(status_code=404, detail= "La pelicula no existe")
+    return movie 
+ 
+
 @router.get("/", response_model=list[Movie])
 def list_movies(
-    user: User = Depends(get_usuario_actual), 
     search: str |None = None,
     session: Session = Depends(get_session)
 ):

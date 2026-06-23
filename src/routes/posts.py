@@ -30,6 +30,18 @@ def list_posts(
     return posts
 
 
+@router.get("/{post_id}", response_model=Post)
+def one_post(
+    post_id: int,
+    session: Session = Depends(get_session)
+):
+    post = session.get(Post, post_id)
+    if post is None:
+        raise HTTPException(status_code=404, detail="Post no encontrado")
+
+    return post
+
+
 @router.patch("/{post_id}", response_model=Post)
 def actualizar_post(
     post: CreatePost,

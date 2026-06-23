@@ -27,7 +27,7 @@ class User(UserBase, table=True):
 
 class RecommendUser(SQLModel):
     name: str
-    profile_pic_URL: str | None = Field(default=None)
+    profile_pic_url: str | None = Field(default=None)
     id:int
 
 
@@ -49,6 +49,7 @@ class UserUpdate(SQLModel):
     name: str | None = Field(default=None)
     bio: str | None = Field(default=None)
     email: str | None = Field(default=None)
+    profile_pic_url: str | None = Field(default=None)
 
 
 class UserProfile(SQLModel):
@@ -56,6 +57,9 @@ class UserProfile(SQLModel):
     id: int  | None = Field (default=None)
     profile_pic_url: str  | None = Field (default=None)
     bio:str   | None = Field (default=None)
+    n_followers: int | None = Field (default=None)
+    n_followed: int | None = Field (default=None)
+    n_reviews: int | None = Field (default=None)
 
 
 class Movie(SQLModel, table=True):

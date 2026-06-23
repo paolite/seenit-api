@@ -4,6 +4,7 @@ from sqlmodel import Session, select
 from src.database import get_session
 from src.modelos import Follow, Post, PostFeed, RecommendUser, Review, ReviewFeed
 from src.routes.users import User, get_usuario_actual
+from src.people_you_may_know import people_you_may_know
 
 router = APIRouter(prefix="/feed", tags=["feed"])
 
@@ -18,7 +19,7 @@ def post_feed(
         .join(User, User.id == Post.user_id)
         .join(Follow, Follow.followed_id == Post.user_id)
         .where(me.id == Follow.follower_id)
-    ).all()
+        .order_by(Post.fecha.desc()))
 
     posts = []
 
@@ -47,6 +48,7 @@ def review_feed(
         .join(User, User.id == Review.user_id)
         .join(Follow, Follow.followed_id == User.id)
         .where(Follow.follower_id == me.id)
+        .order_by(Review.fecha.desc())
     )
 
     reviews = []
@@ -79,6 +81,7 @@ def reviews_like_you(
         .join(User, User.id == Review.user_id)
         .where(Review.movie_id.in_(my_id_reviews))
         .where(Review.user_id != me.id)
+        .order_by(Review.fecha.desc())
     )
 
     reviews = []
@@ -101,26 +104,8 @@ def reviews_like_you(
 
 @router.get("/people", response_model=list[RecommendUser])
 def follower_of_followed(
-    session: Session = Depends(get_session), me: User = Depends(get_usuario_actual)
+    session: Session = Depends(get_session),
+    usuario_actual: User = Depends (get_usuario_actual)
 ):
 
-    followed_ids = session.exec(
-        select(Follow.followed_id).where(Follow.follower_id == me.id)
-    ).all()
-
-    followed_by_followed = session.exec(
-        select(User)
-        .join(Follow, User.id== Follow.followed_id)
-        .where(Follow.follower_id.in_(followed_ids))
-        .where(Follow.followed_id != me.id)
-        .where(Follow.followed_id.not_in(followed_ids))
-        .distinct()
-    )
-
-    people = []
-
-    for followed in followed_by_followed:
-        res = RecommendUser(profile_pic_URL=followed.profile_pic_url, name=followed.name, id= followed.id)
-        people.append(res)
-
-    return people
+    return people_you_may_know(session, usuario_actual)

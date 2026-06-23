@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
 from sqlmodel import Session, select
+from sqlalchemy import func
 
 from src.auth import (
     ALGORITHM,
@@ -12,7 +13,8 @@ from src.auth import (
     verificar_password,
 )
 from src.database import get_session
-from src.modelos import Follow, User, UserCreate, UserPublic, UserUpdate, UserProfile
+from src.modelos import Follow, User, UserCreate, UserPublic, UserUpdate, UserProfile, Review, RecommendUser
+from src.people_you_may_know import people_you_may_know
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -54,13 +56,25 @@ def registrar_usuario(
     return user
 
 
-@router.get("/", response_model=list[UserPublic])
+@router.get("/", response_model=list[RecommendUser])
 def listar_usuarios(
     session: Session = Depends(get_session),
     usuario_actual: User = Depends(get_usuario_actual),
+    search: str |None = None
 ):
-    usuarios = session.exec(select(User)).all()
-    return usuarios
+    if search is None:
+        return []
+
+    if search == "":
+        return people_you_may_know(session, usuario_actual)
+
+
+    consulta = select(User)
+    if search:
+        consulta= consulta.where(User.name.ilike(f"%{search}%"))
+    consulta= session.exec(consulta).all()
+
+    return consulta
 
 
 @router.post("/login", status_code=200)
@@ -109,12 +123,14 @@ def watch_account(
     account= session.get(User, account_id)
     if account is None:
         raise HTTPException(status_code=404,detail= "No existe tal usuario")
+    
+    n_followers= session.exec(select(func.count()).select_from(Follow).where(Follow.followed_id==account_id)).one()
+    n_followed= session.exec(select(func.count()).select_from(Follow).where(Follow.follower_id==account_id)).one()
+    n_reviews= session.exec(select(func.count()).select_from(Review).where(Review.user_id==account_id)).one()
+
+    account = UserProfile.model_validate({"n_followers": n_followers, "n_followed": n_followed, "n_reviews": n_reviews, "name": account.name, "bio": account.bio, "profile_pic_url": account.profile_pic_url,"id": account.id })
 
     return account
-
-
-
-
 
 
 
